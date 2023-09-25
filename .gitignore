@@ -1,0 +1,7 @@
+datasets/*
+slurm
+training_checkpoints
+__pycache__
+*.egg-info
+*.ipynb
+.vscode
