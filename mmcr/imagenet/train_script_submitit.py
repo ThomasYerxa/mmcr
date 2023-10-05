@@ -17,7 +17,9 @@ parser.add_argument("--imagenet_path", type=str, default="./datasets/ILSVRC_2012
 parser.add_argument("--zip_path", type=str, default="./datasets/ILSVRC_2012.zip")
 parser.add_argument("--num_workers", type=int, default=16)
 parser.add_argument("--save_freq", type=int, default=10)
-parser.add_argument("--save_folder", type=str, default=".")
+parser.add_argument(
+    "--save_folder", type=str, default="./training_checkpoints/two_augs"
+)
 
 parser.add_argument("--objective", type=str, default="MMCR")
 

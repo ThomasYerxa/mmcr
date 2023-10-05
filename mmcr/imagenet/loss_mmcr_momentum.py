@@ -6,14 +6,14 @@ from typing import List, Tuple
 import einops
 
 
-class MCMC_Momentum_Loss(nn.Module):
+class MMCR_Momentum_Loss(nn.Module):
     def __init__(
         self,
         lmbda: float,
         n_aug: int,
         distributed: bool = True,
     ):
-        super(MCMC_Momentum_Loss, self).__init__()
+        super(MMCR_Momentum_Loss, self).__init__()
         self.lmbda = lmbda
         self.n_aug = n_aug
         self.distributed = distributed

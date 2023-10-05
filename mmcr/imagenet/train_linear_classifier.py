@@ -30,16 +30,12 @@ def train_val(net, data_loader, train_optimizer, epoch):
         loss_criterion = nn.CrossEntropyLoss()
         for data, target in data_bar:
             data, target = data.cuda(non_blocking=True), target.cuda(non_blocking=True)
-            print("data loaded")
             out = net(data)
-            print("forward complete")
             loss = loss_criterion(out, target)
-            print("loss_calculted")
 
             if is_train:
                 train_optimizer.zero_grad()
                 loss.backward()
-                print("backward completed")
                 train_optimizer.step()
 
             total_num += data.size(0)

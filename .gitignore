@@ -1,7 +1,9 @@
 datasets/*
 slurm
 training_checkpoints
-__pycache__
+*__pycache__*
 *.egg-info
 *.ipynb
 .vscode
+.empty
+.ipynb_checkpoints

@@ -1,8 +1,8 @@
-from mmcr.misc import LARS, MomentumUpdate, LogLR, collate_fn, get_num_samples_in_batch
-from mmcr.loss_mmcr_momentum import MCMC_Momentum_Loss
-from mmcr.data import get_datasets
-from mmcr.knn import KnnMonitor
-from mmcr.models import MomentumModel, MomentumComposerWrapper, Model, ComposerWrapper
+from mmcr.imagenet.misc import LARS, MomentumUpdate, LogLR, collate_fn, get_num_samples_in_batch
+from mmcr.imagenet.loss_mmcr_momentum import MMCR_Momentum_Loss
+from mmcr.imagenet.data import get_datasets
+from mmcr.imagenet.knn import KnnMonitor
+from mmcr.imagenet.models import MomentumModel, MomentumComposerWrapper, Model, ComposerWrapper
 
 import torch
 import composer
@@ -86,7 +86,7 @@ def train(gpu, args, **kwargs):
 
     # objective
     args.distributed = args.n_gpus * args.n_nodes > 1
-    objective = MCMC_Momentum_Loss(args.lmbda, args.n_aug, args.distributed)
+    objective = MMCR_Momentum_Loss(args.lmbda, args.n_aug, args.distributed)
     projector_dims = [8192, 8192, 512]
     objective = torch.nn.SyncBatchNorm.convert_sync_batchnorm(objective)
 
