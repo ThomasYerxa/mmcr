@@ -1,12 +1,12 @@
-from mmcr.train import train
-from mmcr.distributed import init_dist_node
+from mmcr.imagenet.train import train
+from mmcr.imagenet.distributed import init_dist_node
 
 from argparse import ArgumentParser
 import submitit
 
 parser = ArgumentParser()
 parser.add_argument("--batch_size", type=int, default=2048)
-parser.add_argument("--n_aug", type=int, default=2)
+parser.add_argument("--n_aug", type=int, default=8)
 parser.add_argument("--lr", type=float, default=0.6)
 parser.add_argument("--weight_decay", type=float, default=1e-6)
 parser.add_argument("--momentum", type=float, default=0.9)
@@ -18,7 +18,7 @@ parser.add_argument("--zip_path", type=str, default="./datasets/ILSVRC_2012.zip"
 parser.add_argument("--num_workers", type=int, default=16)
 parser.add_argument("--save_freq", type=int, default=10)
 parser.add_argument(
-    "--save_folder", type=str, default="./training_checkpoints/two_augs"
+    "--save_folder", type=str, default="./training_checkpoints/imagenet/eight_views"
 )
 
 parser.add_argument("--objective", type=str, default="MMCR")

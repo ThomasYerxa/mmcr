@@ -9,15 +9,14 @@ import numpy as np
 from tqdm import tqdm
 from typing import OrderedDict
 
-from mmcr.imagenet.data import ZipImageNet, ImageNetValTransform
+from mmcr.cifar_stl.data import get_datasets
+from mmcr.cifar_stl.models import Model
 
 
 # train or test linear classifier for one epoch
 def train_val(net, data_loader, train_optimizer, epoch):
     is_train = train_optimizer is not None
     net.train() if is_train else net.eval()
-
-    print("startin epoch")
 
     total_loss, total_correct_1, total_correct_5, total_num, data_bar = (
         0.0,
@@ -67,6 +66,7 @@ def train_val(net, data_loader, train_optimizer, epoch):
 
 def train_classifier(
     model_path: str,
+    dataset: str = "cifar10",
     batch_size: int = 512,
     epochs: int = 50,
     lr: float = 1e-2,
@@ -74,34 +74,7 @@ def train_classifier(
     save_name=None,
 ):
     top_acc = 0.0
-    train_transform = transforms.Compose(
-        [
-            transforms.RandomResizedCrop(224, interpolation=Image.BICUBIC),
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )
-    test_transform = transforms.Compose(
-        [
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )
-    train_data = ZipImageNet(
-        zip_path="./datasets/ILSVRC_2012.zip",
-        root="./datasets/ILSVRC_2012",
-        split="train",
-        transform=train_transform,
-    )
-    test_data = ZipImageNet(
-        zip_path="./datasets/ILSVRC_2012.zip",
-        root="./datasets/ILSVRC_2012",
-        split="val",
-        transform=test_transform,
-    )
+    train_data, _, test_data = get_datasets(dataset, 1, "./datasets", batch_transform=False) 
 
     train_loader = DataLoader(
         train_data, batch_size=batch_size, shuffle=True, num_workers=13, pin_memory=True
@@ -110,27 +83,19 @@ def train_classifier(
         test_data, batch_size=batch_size, shuffle=False, num_workers=13, pin_memory=True
     )
 
-    # load pretrained weights (fully connected layer excluded)
-    model = resnet50()
-
-    sd = torch.load(model_path, map_location="cpu")["state"]["model"]
-    new_sd = OrderedDict()
-    for k, v in sd.items():
-        # skip projector, momentum networks, and fully connected
-        if "g." in k or "mom_" in k or "fc" in k:
-            continue
-        parts = k.split(".")
-        idx = parts.index("f")
-        new_k = ".".join(parts[idx + 1 :])
-        new_sd[new_k] = v
-    model.load_state_dict(new_sd, strict=False)
+    # load pretrained weights
+    pretrained_model = Model(dataset=dataset)
+    sd = torch.load(model_path, map_location="cpu")
+    pretrained_model.load_state_dict(sd)
+    dataset_num_classes = {"cifar10": 10, "stl10": 10, "cifar100": 100}
+    model = Net(pretrained_model.f, dataset_num_classes[dataset])
 
     # only fully connected requires grad
     model.requires_grad_(False)
     model.fc.requires_grad_(True)
     model = model.cuda()
 
-    optimizer = optim.SGD(model.fc.parameters(), lr=lr, momentum=0.9, weight_decay=1e-6)
+    optimizer = optim.Adam(model.fc.parameters(), lr=lr, weight_decay=1e-6)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
     if save_path is not None and save_name is None:
@@ -150,4 +115,16 @@ def train_classifier(
             save_str = save_path + save_name + ".pt"
             torch.save(model.state_dict(), save_str)
 
-    return None
+    return model, top_acc 
+
+# a wrapper class for the resnet50 model
+class Net(nn.Module):
+    def __init__(self, f, num_classes):
+        super().__init__()
+        self.f = f
+        self.fc = nn.Linear(2048, num_classes)
+
+    def forward(self, x):
+        f = self.f(x)
+        f = f.view(f.size(0), -1)
+        return self.fc(f)

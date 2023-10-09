@@ -109,7 +109,8 @@ def train(gpu, args, **kwargs):
     scheduler = CosineAnnealingWithWarmupScheduler(t_warmup="10ep", alpha_f=0.001)
 
     # callbacks
-    callback_list = [KnnMonitor(memory_loader, test_loader), LogLR()]
+    #callback_list = [KnnMonitor(memory_loader, test_loader), LogLR()]
+    callback_list = [LogLR()]
     callback_list.append(MomentumUpdate(tau=args.tau))
 
     # dspec

@@ -4,8 +4,6 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from tqdm import tqdm
-from composer import Callback, State, Logger
-
 
 ###  KNN based evaluation, for use during unsupervised pretraining to track progress ###
 def test_one_epoch(
@@ -86,37 +84,3 @@ def test_one_epoch(
     if total_num == 0:
         total_num += 1
     return total_top1 / total_num * 100, total_top5 / total_num * 100
-
-
-### COMPOSER EVALUATION VIA CALLBACK ###
-class KnnMonitor(Callback):
-    def __init__(self, memory_loader: DataLoader, test_loader: DataLoader):
-        super(KnnMonitor, self).__init__()
-        self.memory_loader = memory_loader
-        self.test_loader = test_loader
-        self.count_knn_eval = 0
-        self.distributed = False
-        self.top_acc = 0.0
-        self.epochs_to_classify = []
-
-    def epoch_end(self, state: State, logger: Logger):
-        if self.count_knn_eval % 10 == 0:
-            if self.distributed:
-                net = nn.parallel.DistributedDataParallel(state.model.module.module)
-            else:
-                net = state.model.module
-
-            top_1, top_5 = test_one_epoch(
-                memory_data_loader=self.memory_loader,
-                test_data_loader=self.test_loader,
-                net=net,
-                epoch=-1,
-            )
-
-            print(f"top_1={top_1}")
-            print(f"top_5={top_5}")
-
-            if top_1 > self.top_acc:
-                self.top_acc = top_1
-
-        self.count_knn_eval += 1
