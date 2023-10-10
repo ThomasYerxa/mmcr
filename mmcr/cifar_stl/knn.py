@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 ###  KNN based evaluation, for use during unsupervised pretraining to track progress ###
+# adapted from: https://github.com/yaohungt/Barlow-Twins-HSIC/blob/main/main.py
 def test_one_epoch(
     net: nn.Module,
     memory_data_loader: DataLoader,

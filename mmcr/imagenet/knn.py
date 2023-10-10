@@ -7,7 +7,9 @@ from tqdm import tqdm
 from composer import Callback, State, Logger
 
 
-###  KNN based evaluation, for use during unsupervised pretraining to track progress ###
+###  KNN based evaluation, for use during unsupervised pretr
+# adapted from: https://github.com/yaohungt/Barlow-Twins-HSIC/blob/main/main.py
+ining to track progress ###
 def test_one_epoch(
     net: nn.Module,
     memory_data_loader: DataLoader,

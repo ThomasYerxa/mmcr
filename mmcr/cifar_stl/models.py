@@ -26,7 +26,7 @@ class Model(nn.Module):
                         module, nn.MaxPool2d
                     ):
                         self.f.append(module)
-                elif dataset == "tiny_imagenet" or dataset == "stl10":
+                elif dataset == "stl10":
                     if not isinstance(module, nn.Linear):
                         self.f.append(module)
             # encoder
@@ -48,8 +48,5 @@ class Model(nn.Module):
         x = self.f(x)
         feature = torch.flatten(x, start_dim=1)
         out = self.g(feature)
-
-        # normalize (project to unit sphere)
-        feature, out = F.normalize(feature, dim=-1), F.normalize(out, dim=-1)
 
         return feature, out

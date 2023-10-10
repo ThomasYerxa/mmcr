@@ -69,7 +69,6 @@ class MMCR_Momentum_Loss(nn.Module):
 
         batch_size = z_local.shape[0]
         loss = -1.0 * global_nuc + self.lmbda * local_nuc / batch_size
-        loss = loss * 1.00
 
         loss_dict = {
             "loss": loss.item(),
