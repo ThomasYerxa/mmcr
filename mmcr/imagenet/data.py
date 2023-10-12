@@ -41,6 +41,34 @@ class ZipImageNet(torchvision.datasets.ImageNet):
         return sample, target
 
 
+class Zip_ImageFolder(torchvision.datasets.ImageFolder):
+    def __init__(self, zip_path, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.zip_path = zip_path
+        self.zip_archvive = None
+
+    def __getitem__(self, index: int):
+        path, target = self.samples[index]
+        if self.zip_archvive is None:
+            self.zip_archvive = ZipFile(self.zip_path)
+
+        path_split = path.split("/")
+        fh = self.zip_archvive.open(
+            path_split[-3] + "/" + path_split[-2] + "/" + path_split[-1]
+        )
+
+        image = Image.open(fh)
+        sample = image.convert("RGB")
+
+        if self.transform is not None:
+            sample = self.transform(sample)
+
+        if self.target_transform is not None:
+            sample = self.target_transform(sample)
+
+        return sample, target
+
+
 # augmentation pipeline adapted from: https://github.com/facebookresearch/barlowtwins/blob/main/main.py
 class ImageNetValTransform:
     def __init__(self):
@@ -140,24 +168,77 @@ class Barlow_Transform:
         return y
 
 
-def get_datasets(n_aug, imagenet_path, zip_path, **kwargs):
-    train_data = ZipImageNet(
-        zip_path=zip_path,
-        root=imagenet_path,
-        split="train",
-        transform=Barlow_Transform(n_transform=n_aug),
-    )
-    memory_data = ZipImageNet(
-        zip_path=zip_path,
-        root=imagenet_path,
-        split="train",
-        transform=ImageNetValTransform(),
-    )
-    test_data = ZipImageNet(
-        zip_path=zip_path,
-        root=imagenet_path,
-        split="val",
-        transform=ImageNetValTransform(),
-    )
+def get_datasets(
+    n_aug, dataset="imagenet", use_zip=True, **kwargs
+):
+    if dataset == "imagenet":
+        imagenet_path = "./datasets/ILSVRC_2012"
+        zip_path = "./datasets/ILSVRC_2012.zip"
+        if use_zip:
+            train_data = ZipImageNet(
+                zip_path=zip_path,
+                root=imagenet_path,
+                split="train",
+                transform=Barlow_Transform(n_transform=n_aug),
+            )
+            memory_data = ZipImageNet(
+                zip_path=zip_path,
+                root=imagenet_path,
+                split="train",
+                transform=ImageNetValTransform(),
+            )
+            test_data = ZipImageNet(
+                zip_path=zip_path,
+                root=imagenet_path,
+                split="val",
+                transform=ImageNetValTransform(),
+            )
+        else:
+            train_data = torchvision.datasets.ImageNet(
+                root=imagenet_path,
+                split="train",
+                transform=Barlow_Transform(n_transform=n_aug),
+            )
+            memory_data = torchvision.datasets.ImageNet(
+                root=imagenet_path,
+                split="train",
+                transform=ImageNetValTransform(),
+            )
+            test_data = torchvision.datasets.ImageNet(
+                root=imagenet_path,
+                split="val",
+                transform=ImageNetValTransform(),
+            )
+    if dataset == "imagenet_100":
+        imagenet_100_path = "./datasets/imagenet_100/"
+        if use_zip:
+            train_data = Zip_ImageFolder(
+                zip_path=imagenet_100_path + "train.zip",
+                root=imagenet_100_path + "train/",
+                transform=Barlow_Transform(n_transform=n_aug),
+            )
+            memory_data = Zip_ImageFolder(
+                zip_path=imagenet_100_path + "train.zip",
+                root=imagenet_100_path + "train/",
+                transform=ImageNetValTransform(),
+            )
+            test_data = Zip_ImageFolder(
+                zip_path=imagenet_100_path + "val.zip",
+                root=imagenet_100_path + "val/",
+                transform=ImageNetValTransform(),
+            )
+        else:
+            train_data = torchvision.datasets.ImageFolder(
+                root=imagenet_100_path + "train/",
+                transform=Barlow_Transform(n_transform=n_aug),
+            )
+            memory_data = torchvision.datasets.ImageFolder(
+                root=imagenet_100_path + "train/",
+                transform=ImageNetValTransform(),
+            )
+            test_data = torchvision.datasets.ImageFolder(
+                root=imagenet_100_path + "val/",
+                transform=ImageNetValTransform(),
+            )
 
     return train_data, memory_data, test_data

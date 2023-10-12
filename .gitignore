@@ -3,6 +3,7 @@ slurm
 training_checkpoints
 *__pycache__*
 *.egg-info
+*dev.py
 *.ipynb
 .vscode
 .empty
