@@ -17,8 +17,6 @@ def train_val(net, data_loader, train_optimizer, epoch):
     is_train = train_optimizer is not None
     net.train() if is_train else net.eval()
 
-    print("startin epoch")
-
     total_loss, total_correct_1, total_correct_5, total_num, data_bar = (
         0.0,
         0.0,
@@ -135,7 +133,6 @@ def train_classifier(
 
     if save_path is not None and save_name is None:
         save_name = str(np.random.rand() * 1e5)
-    print(save_name)
     for epoch in range(1, epochs + 1):
         # train one epoch
         train_loss, train_acc_1, train_acc_5 = train_val(

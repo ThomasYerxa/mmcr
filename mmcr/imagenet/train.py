@@ -39,9 +39,7 @@ def train(gpu, args, **kwargs):
     print(args)
 
     # datasets
-    train_data, memory_data, test_data = get_datasets(
-        args.n_aug, args.imagenet_path, args.zip_path
-    )
+    train_data, memory_data, test_data = get_datasets(n_aug=args.n_aug, dataset="imagenet")
 
     # samplers
     train_sampler = torch.utils.data.DistributedSampler(

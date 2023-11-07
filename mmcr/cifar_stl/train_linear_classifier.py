@@ -110,8 +110,10 @@ def train_classifier(
         test_loss, test_acc_1, test_acc_5 = train_val(model, test_loader, None, epoch)
         scheduler.step()
 
-        if test_acc_1 > top_acc and save_path is not None and save_name is not None:
+        if test_acc_1 > top_acc:
             top_acc = test_acc_1
+
+        if test_acc_1 == top_acc and save_path is not None and save_name is not None:
             save_str = save_path + save_name + ".pt"
             torch.save(model.state_dict(), save_str)
 
