@@ -1,5 +1,6 @@
 import torch
 from torch import nn, Tensor
+import torch.nn.functional as F
 import einops
 import random
 from typing import Tuple
@@ -8,18 +9,19 @@ import sys
 
 
 class MMCR_Loss(nn.Module):
-    def __init__(self, lmbda: float, n_aug: int, distributed: bool = cf.distributed):
+    def __init__(self, lmbda: float, n_aug: int, distributed: bool = False):
         super(MMCR_Loss, self).__init__()
         self.lmbda = lmbda
         self.n_aug = n_aug
-        self.distribured = distributed
+        self.distributed = distributed
+        self.first_time = True
 
     def forward(self, z: Tensor) -> Tuple[Tensor, dict]:
+        z = F.normalize(z, dim=-1)
         z_local_ = einops.rearrange(z, "(B N) C -> B C N", N=self.n_aug)
-        z_local_ = F.normalize(z_local_, dim=-1) 
 
         # gather across devices into list
-        if self.distribured:
+        if self.distributed:
             z_list = [
                 torch.zeros_like(z_local_)
                 for i in range(torch.distributed.get_world_size())
@@ -32,7 +34,6 @@ class MMCR_Loss(nn.Module):
 
         else:
             z_local = z_local_
-
 
         centroids = torch.mean(z_local, dim=-1)
         if self.lmbda != 0.0:
@@ -49,5 +50,7 @@ class MMCR_Loss(nn.Module):
             "local_nuc": local_nuc.item(),
             "global_nuc": global_nuc.item(),
         }
+
+        self.first_time = False
 
         return loss, loss_dict

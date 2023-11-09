@@ -168,9 +168,7 @@ class Barlow_Transform:
         return y
 
 
-def get_datasets(
-    n_aug, dataset="imagenet", use_zip=True, **kwargs
-):
+def get_datasets(n_aug, dataset="imagenet", use_zip=True, **kwargs):
     if dataset == "imagenet":
         imagenet_path = "./datasets/ILSVRC_2012"
         zip_path = "./datasets/ILSVRC_2012.zip"

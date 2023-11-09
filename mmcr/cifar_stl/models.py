@@ -10,27 +10,22 @@ class Model(nn.Module):
     def __init__(self, projector_dims: list = [512, 128], dataset: str = "cifar10"):
         super(Model, self).__init__()
 
-        # insures output of encoder for all datasets is 2048-dimensional
-        if dataset == "imagenet":
-            self.f = resnet50(zero_init_residual=True)
-            self.f.fc = nn.Identity()
-        else:
-            self.f = []
-            for name, module in resnet50().named_children():
-                if name == "conv1":
-                    module = nn.Conv2d(
-                        3, 64, kernel_size=3, stride=1, padding=1, bias=False
-                    )
-                if dataset == "cifar10" or "cifar100":
-                    if not isinstance(module, nn.Linear) and not isinstance(
-                        module, nn.MaxPool2d
-                    ):
-                        self.f.append(module)
-                elif dataset == "stl10":
-                    if not isinstance(module, nn.Linear):
-                        self.f.append(module)
-            # encoder
-            self.f = nn.Sequential(*self.f)
+        self.f = []
+        for name, module in resnet50().named_children():
+            if name == "conv1":
+                module = nn.Conv2d(
+                    3, 64, kernel_size=3, stride=1, padding=1, bias=False
+                )
+            if dataset == "cifar10" or "cifar100":
+                if not isinstance(module, nn.Linear) and not isinstance(
+                    module, nn.MaxPool2d
+                ):
+                    self.f.append(module)
+            elif dataset == "stl10":
+                if not isinstance(module, nn.Linear):
+                    self.f.append(module)
+        # encoder
+        self.f = nn.Sequential(*self.f)
 
         # projection head (Following exactly barlow twins offical repo)
         projector_dims = [2048] + projector_dims

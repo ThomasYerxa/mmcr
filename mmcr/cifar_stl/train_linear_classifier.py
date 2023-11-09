@@ -74,7 +74,9 @@ def train_classifier(
     save_name=None,
 ):
     top_acc = 0.0
-    train_data, _, test_data = get_datasets(dataset, 1, "./datasets", batch_transform=False) 
+    train_data, _, test_data = get_datasets(
+        dataset, 1, "./datasets", batch_transform=False
+    )
 
     train_loader = DataLoader(
         train_data, batch_size=batch_size, shuffle=True, num_workers=13, pin_memory=True
@@ -117,7 +119,8 @@ def train_classifier(
             save_str = save_path + save_name + ".pt"
             torch.save(model.state_dict(), save_str)
 
-    return model, top_acc 
+    return model, top_acc
+
 
 # a wrapper class for the resnet50 model
 class Net(nn.Module):

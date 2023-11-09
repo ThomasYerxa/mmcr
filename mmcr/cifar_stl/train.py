@@ -3,11 +3,9 @@ from tqdm import tqdm
 import einops
 
 from mmcr.cifar_stl.data import get_datasets
-from mmcr.cifar_stl..models import Model
-from mmrc.cifar_stl.knn import test_one_epoch
+from mmcr.cifar_stl.models import Model
+from mmcr.cifar_stl.knn import test_one_epoch
 from mmcr.cifar_stl.loss_mmcr import MMCR_Loss
-
-from src.utils import checkpoint_model
 
 
 def train(
@@ -20,7 +18,9 @@ def train(
     save_folder: str,
     save_freq: int,
 ):
-    train_dataset, memory_dataset, test_dataset = get_datasets(dataset=dataset, n_aug=n_aug)
+    train_dataset, memory_dataset, test_dataset = get_datasets(
+        dataset=dataset, n_aug=n_aug
+    )
     model = Model(projector_dims=[512, 128], dataset=dataset)
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=12
@@ -33,7 +33,7 @@ def train(
     )
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-6)
-    loss_function = MMCR_Loss(lmbda=0.0, n_aug=n_aug, distributed=False)
+    loss_function = MMCR_Loss(lmbda=lmbda, n_aug=n_aug, distributed=False)
 
     model = model.cuda()
     top_acc = 0.0
@@ -64,12 +64,14 @@ def train(
 
         if epoch % 1 == 0:
             acc_1, acc_5 = test_one_epoch(
-                model, memory_loader, test_loader, c=10, epoch=epoch, writer=None
+                model,
+                memory_loader,
+                test_loader,
             )
             if acc_1 > top_acc:
                 top_acc = acc_1
 
-            if (epoch % save_freq == 0 or acc_1 == top_acc) and False:
+            if epoch % save_freq == 0 or acc_1 == top_acc:
                 torch.save(
                     model.state_dict(),
                     f"{save_folder}/{dataset}_{n_aug}_{epoch}_acc_{acc_1:0.2f}.pth",

@@ -13,14 +13,16 @@ import torch
 import random
 from PIL import Image, ImageOps, ImageFilter
 
-def get_datasets(
-    dataset, n_aug, data_dir, batch_transform=True, **kwargs
-):
+
+def get_datasets(dataset, n_aug, batch_transform=True, **kwargs):
+    data_dir = "./datasets/"
     if dataset == "stl10":
         train_data = torchvision.datasets.STL10(
             root=data_dir,
             split="train+unlabeled",
-            transform=StlBatchTransform(train_transform=True, n_transform=n_aug, batch_transform=batch_transform),
+            transform=StlBatchTransform(
+                train_transform=True, n_transform=n_aug, batch_transform=batch_transform
+            ),
             download=False,
         )
         memory_data = torchvision.datasets.STL10(
@@ -44,7 +46,10 @@ def get_datasets(
             root=data_dir,
             train=True,
             transform=CifarBatchTransform(
-                train_transform=True, batch_transform=batch_transform, n_transform=n_aug, **kwargs
+                train_transform=True,
+                batch_transform=batch_transform,
+                n_transform=n_aug,
+                **kwargs,
             ),
             download=False,
         )
@@ -75,7 +80,10 @@ def get_datasets(
             root=data_dir,
             train=True,
             transform=CifarBatchTransform(
-                train_transform=True, batch_transform=batch_transform, n_transform=n_aug, **kwargs
+                train_transform=True,
+                batch_transform=batch_transform,
+                n_transform=n_aug,
+                **kwargs,
             ),
             download=False,
         )
@@ -103,6 +111,7 @@ def get_datasets(
         )
 
     return train_data, memory_data, test_data
+
 
 class StlBatchTransform:
     def __init__(self, n_transform, train_transform=True, batch_transform=True):
@@ -162,7 +171,6 @@ class CifarBatchTransform:
         batch_transform=True,
         **kwargs,
     ):
-
         if train_transform is True:
             lst_of_transform = [
                 transforms.RandomResizedCrop(32),
@@ -191,7 +199,6 @@ class CifarBatchTransform:
         self.batch_transform = batch_transform
 
     def __call__(self, x):
-
         if self.batch_transform:
             C, H, W = TF.to_tensor(x).shape
             C_aug, H_aug, W_aug = self.transform(x).shape

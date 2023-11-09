@@ -20,7 +20,7 @@ class MomentumModel(nn.Module):
         self,
         projector_dims: list = [8192, 8192, 512],
         bias_last=False,
-        bias_proj = False,
+        bias_proj=False,
     ):
         super(MomentumModel, self).__init__()
         # insures output of encoder for all datasets is 2048-dimensional
@@ -65,8 +65,6 @@ class MomentumModel(nn.Module):
             pm.data.copy_(po.data)
             pm.requires_grad = False
 
-
-
     def forward(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         x_ = self.f(x)
         feature = torch.flatten(x_, start_dim=1)
@@ -85,7 +83,7 @@ class MomentumComposerWrapper(ComposerModel):
 
         self.module = module
         self.objective = objective
-        self.c = 0 # counts the number of forward calls
+        self.c = 0  # counts the number of forward calls
 
     def loss(self, outputs: Any, batch: Any, *args, **kwargs) -> Tensor:
         loss, loss_dict = self.objective(outputs)
@@ -97,7 +95,7 @@ class MomentumComposerWrapper(ComposerModel):
         if isinstance(batch, Tensor):
             inputs = batch
         else:
-            inputs, _  = batch
+            inputs, _ = batch
 
         features, outputs, features_momentum, outputs_momentum = self.module(inputs)
         if isinstance(batch, Tensor):
@@ -108,12 +106,13 @@ class MomentumComposerWrapper(ComposerModel):
     def get_backbone(self):
         return self.module
 
+
 class Model(nn.Module):
     def __init__(
         self,
         projector_dims: list = [8192, 8192, 512],
         bias_last=False,
-        bias_proj = False,
+        bias_proj=False,
     ):
         super(Model, self).__init__()
 
@@ -132,8 +131,6 @@ class Model(nn.Module):
             layers.append(nn.ReLU())
         layers.append(nn.Linear(projector_dims[-2], projector_dims[-1], bias=bias_last))
         self.g = nn.Sequential(*layers)
-
-
 
     def forward(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         x_ = self.f(x)
@@ -161,7 +158,7 @@ class ComposerWrapper(ComposerModel):
         if isinstance(batch, Tensor):
             inputs = batch
         else:
-            inputs, _  = batch
+            inputs, _ = batch
 
         features, outputs = self.module(inputs)
         if isinstance(batch, Tensor):

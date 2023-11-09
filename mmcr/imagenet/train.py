@@ -1,8 +1,20 @@
-from mmcr.imagenet.misc import LARS, MomentumUpdate, LogLR, collate_fn, get_num_samples_in_batch
+from mmcr.imagenet.misc import (
+    LARS,
+    MomentumUpdate,
+    LogLR,
+    collate_fn,
+    get_num_samples_in_batch,
+)
 from mmcr.imagenet.loss_mmcr_momentum import MMCR_Momentum_Loss
+from mmcr.imagenet.loss_mmcr import MMCR_Loss
 from mmcr.imagenet.data import get_datasets
 from mmcr.imagenet.knn import KnnMonitor
-from mmcr.imagenet.models import MomentumModel, MomentumComposerWrapper, Model, ComposerWrapper
+from mmcr.imagenet.models import (
+    MomentumModel,
+    MomentumComposerWrapper,
+    Model,
+    ComposerWrapper,
+)
 
 import torch
 import composer
@@ -39,17 +51,25 @@ def train(gpu, args, **kwargs):
     print(args)
 
     # datasets
-    train_data, memory_data, test_data = get_datasets(n_aug=args.n_aug, dataset="imagenet")
+    train_data, memory_data, test_data = get_datasets(
+        n_aug=args.n_aug, dataset=args.dataset
+    )
 
     # samplers
     train_sampler = torch.utils.data.DistributedSampler(
-        train_data, num_replicas=args.world_size, rank=args.rank, seed=31
+        train_data,
+        num_replicas=args.world_size,
+        rank=args.rank,
     )
     memory_sampler = torch.utils.data.DistributedSampler(
-        memory_data, num_replicas=args.world_size, rank=args.rank, seed=31
+        memory_data,
+        num_replicas=args.world_size,
+        rank=args.rank,
     )
     test_sampler = torch.utils.data.DistributedSampler(
-        test_data, num_replicas=args.world_size, rank=args.rank, seed=31
+        test_data,
+        num_replicas=args.world_size,
+        rank=args.rank,
     )
 
     # dataloaders
@@ -82,16 +102,21 @@ def train(gpu, args, **kwargs):
         sampler=test_sampler,
     )
 
-    # objective
+    # objective/model
     args.distributed = args.n_gpus * args.n_nodes > 1
-    objective = MMCR_Momentum_Loss(args.lmbda, args.n_aug, args.distributed)
     projector_dims = [8192, 8192, 512]
-    objective = torch.nn.SyncBatchNorm.convert_sync_batchnorm(objective)
-
-    # model
-    model = MomentumModel(projector_dims=projector_dims)
-    model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
-    wrapped_model = MomentumComposerWrapper(module=model, objective=objective)
+    if args.objective == "MMCR_Momentum":
+        objective = MMCR_Momentum_Loss(args.lmbda, args.n_aug, args.distributed)
+        objective = torch.nn.SyncBatchNorm.convert_sync_batchnorm(objective)
+        model = MomentumModel(projector_dims=projector_dims)
+        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+        wrapped_model = MomentumComposerWrapper(module=model, objective=objective)
+    elif args.objective == "MMCR":
+        objective = MMCR_Loss(args.lmbda, args.n_aug, args.distributed)
+        objective = torch.nn.SyncBatchNorm.convert_sync_batchnorm(objective)
+        model = Model(projector_dims=projector_dims)
+        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+        wrapped_model = ComposerWrapper(module=model, objective=objective)
 
     # optimizer
     lr = args.lr * args.batch_size / 256
@@ -99,6 +124,7 @@ def train(gpu, args, **kwargs):
         model.parameters(),
         lr=lr,
         weight_decay=1e-6,
+        momentum=0.9,
         weight_decay_filter=True,
         lars_adaptation_filter=True,
     )
@@ -107,9 +133,11 @@ def train(gpu, args, **kwargs):
     scheduler = CosineAnnealingWithWarmupScheduler(t_warmup="10ep", alpha_f=0.001)
 
     # callbacks
-    #callback_list = [KnnMonitor(memory_loader, test_loader), LogLR()]
     callback_list = [LogLR()]
-    callback_list.append(MomentumUpdate(tau=args.tau))
+    if args.objective == "MMCR_Momentum":
+        callback_list.append(MomentumUpdate(tau=args.tau))
+    if args.knn_monitor:
+        callback_list.append(KnnMonitor(memory_loader, test_loader))
 
     # dspec
     train_dspec = composer.DataSpec(
@@ -129,7 +157,6 @@ def train(gpu, args, **kwargs):
             composer.algorithms.ChannelsLast(),
         ],
         device="gpu",
-        seed=31,
         callbacks=callback_list,
         schedulers=(scheduler),
         save_interval=args.save_freq,

@@ -3,17 +3,18 @@ import sys
 sys.path.append("..")
 
 import submitit
-from mmcr.imagenet.train_linear_classifier import train_classifier
-from torch import nn
+from mmcr.cifar_stl.model_select import select_model
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
-parser.add_argument("--batch_size", type=int, default=2048)
-parser.add_argument("--lr", type=float, default=0.3)
-parser.add_argument("--epochs", type=int, default=100)
-parser.add_argument("--model_path", type=str)
-parser.add_argument("--save_path", type=str, default="./training_checkpoints/imagenet/")
-parser.add_argument("--save_name", type=str, default="classifier")
+parser.add_argument("--batch_size", type=int, default=1024)
+parser.add_argument("--dataset", type=str, default="cifar10")
+parser.add_argument("--lr", type=float, default=0.1)
+parser.add_argument("--epochs", type=int, default=50)
+parser.add_argument("--checkpoint_dir", type=str)
+parser.add_argument(
+    "--save_path", type=str, default="./training_checkpoints/cifar_stl/"
+)
 
 args = parser.parse_args()
 
@@ -26,14 +27,14 @@ executor.update_parameters(gpus_per_node=1)
 executor.update_parameters(cpus_per_task=13)
 executor.update_parameters(slurm_partition="gpu")
 executor.update_parameters(constraint="a100-80gb")
-executor.update_parameters(name="classifier_train")
+executor.update_parameters(name="model_select")
 
 job = executor.submit(
-    train_classifier,
-    model_path=args.model_path,
+    select_model,
+    checkpoint_directory=args.checkpoint_dir,
+    dataset=args.dataset,
     batch_size=args.batch_size,
     lr=args.lr,
     epochs=args.epochs,
-    save_path=args.save_path,
-    save_name=args.save_name,
+    save_dir=args.save_path,
 )

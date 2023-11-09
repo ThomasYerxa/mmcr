@@ -53,9 +53,7 @@ def get_shared_folder() -> Path:
 
 
 def init_dist_node(args):
-
     if "SLURM_JOB_ID" in os.environ:
-
         args.ngpus_per_node = torch.cuda.device_count()
 
         # requeue job on SLURM preemption
@@ -68,13 +66,12 @@ def init_dist_node(args):
         host_name = stdout.decode().splitlines()[0]
         args.dist_url = f"tcp://{host_name}:{random.randint(49152, 65535)}"
         args.host_name_ = host_name
-        
+
         # distributed parameters
         args.rank = int(os.getenv("SLURM_NODEID")) * args.ngpus_per_node
         args.world_size = int(os.getenv("SLURM_NNODES")) * args.ngpus_per_node
 
     else:
-
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
         args.ngpus_per_node = torch.cuda.device_count()
 
@@ -83,8 +80,7 @@ def init_dist_node(args):
         args.world_size = args.ngpus_per_node
 
 
-def init_dist_gpu(gpu, args):
-
+def init_dist_gpu(gpu, args, fix_seed=False):
     if args.slurm or True:
         job_env = submitit.JobEnvironment()
         args.gpu = job_env.local_rank
@@ -100,7 +96,8 @@ def init_dist_gpu(gpu, args):
         rank=args.rank,
     )
 
-    fix_random_seeds()
+    if fix_seed:
+        fix_random_seeds()
     torch.cuda.set_device(args.gpu)
     cudnn.benchmark = True
     dist.barrier()
