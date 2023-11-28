@@ -75,7 +75,7 @@ def train_classifier(
 ):
     top_acc = 0.0
     train_data, _, test_data = get_datasets(
-        dataset, 1, "./datasets", batch_transform=False
+        dataset, 1, "./datasets", batch_transform=False, supervised=True
     )
 
     train_loader = DataLoader(

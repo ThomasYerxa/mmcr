@@ -17,6 +17,7 @@ parser.add_argument("--zip_path", type=str, default="./datasets/ILSVRC_2012.zip"
 parser.add_argument("--num_workers", type=int, default=16)
 parser.add_argument("--save_freq", type=int, default=20)
 parser.add_argument("--knn_monitor", action="store_true")
+parser.add_argument('--use_zip', action="store_true")
 parser.add_argument(
     "--save_folder", type=str, default="./training_checkpoints/imagenet/eight_views"
 )

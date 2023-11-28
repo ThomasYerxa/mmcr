@@ -52,7 +52,7 @@ def train(gpu, args, **kwargs):
 
     # datasets
     train_data, memory_data, test_data = get_datasets(
-        n_aug=args.n_aug, dataset=args.dataset
+        n_aug=args.n_aug, dataset=args.dataset, use_zip=args.use_zip
     )
 
     # samplers

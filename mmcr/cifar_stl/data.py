@@ -14,12 +14,13 @@ import random
 from PIL import Image, ImageOps, ImageFilter
 
 
-def get_datasets(dataset, n_aug, batch_transform=True, **kwargs):
+def get_datasets(dataset, n_aug, batch_transform=True, supervised=False, **kwargs):
     data_dir = "./datasets/"
     if dataset == "stl10":
+        train_split = "train" if supervised else "train+unlabeled"
         train_data = torchvision.datasets.STL10(
             root=data_dir,
-            split="train+unlabeled",
+            split=train_split,
             transform=StlBatchTransform(
                 train_transform=True, n_transform=n_aug, batch_transform=batch_transform
             ),

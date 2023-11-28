@@ -8,3 +8,5 @@ training_checkpoints
 .vscode
 .empty
 .ipynb_checkpoints
+notebooks/*
+notebooks
