@@ -7,8 +7,8 @@ import submitit
 parser = ArgumentParser()
 parser.add_argument("--batch_size", type=int, default=2048)
 parser.add_argument("--dataset", type=str, default="imagenet")
-parser.add_argument("--n_aug", type=int, default=8)
-parser.add_argument("--lr", type=float, default=0.8)
+parser.add_argument("--n_aug", type=int, default=2)
+parser.add_argument("--lr", type=float, default=0.6)
 parser.add_argument("--tau", type=float, default=0.99)
 parser.add_argument("--lmbda", type=float, default=0.0)
 parser.add_argument("--epochs", type=int, default=100)
@@ -19,7 +19,7 @@ parser.add_argument("--save_freq", type=int, default=20)
 parser.add_argument("--knn_monitor", action="store_true")
 parser.add_argument('--use_zip', action="store_true")
 parser.add_argument(
-    "--save_folder", type=str, default="./training_checkpoints/imagenet/eight_views"
+    "--save_folder", type=str, default="./training_checkpoints/imagenet/two_views"
 )
 
 parser.add_argument("--objective", type=str, default="MMCR_Momentum")

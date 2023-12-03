@@ -14,17 +14,17 @@ The use of zipped dataloading can be toggled on/off via the parameter `use_zip` 
 
 
 ## Pretraining
-The code is setup to run on a SLURM cluster and uses [sumbitit](https://github.com/facebookincubator/submitit) for job submission.
+The code is setup to run on a SLURM cluster and uses [submitit](https://github.com/facebookincubator/submitit) for job submission.
 
 ### ImageNet
 To pretrain on ImageNet with default settings run the command:  
 ```
 python3 pretrain_imagenet.py
 ```
-By default training uses 4 nodes each with 4 A100 GPUs.
-Hyperparameters can be adjusted in the command line, i.e. to run with 2 views rather than 8: 
+By default training uses 4 nodes each with 4 A100 GPUs (though 8-view training requires 8 nodes).
+Hyperparameters can be adjusted in the command line, i.e. to run with 4 views rather than 2: 
 ```
-python3 pretrain_imagenet.py --n_aug 2
+python3 pretrain_imagenet.py --n_aug 4
 ```
 See `pretrain_imagenet.py` for details.
 

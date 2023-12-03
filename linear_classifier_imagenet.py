@@ -14,6 +14,7 @@ parser.add_argument("--epochs", type=int, default=100)
 parser.add_argument("--model_path", type=str)
 parser.add_argument("--save_path", type=str, default="./training_checkpoints/imagenet/")
 parser.add_argument("--save_name", type=str, default="classifier")
+parser.add_argument('--use_zip', action="store_true")
 
 args = parser.parse_args()
 
@@ -36,4 +37,5 @@ job = executor.submit(
     epochs=args.epochs,
     save_path=args.save_path,
     save_name=args.save_name,
+    use_zip=args.use_zip
 )

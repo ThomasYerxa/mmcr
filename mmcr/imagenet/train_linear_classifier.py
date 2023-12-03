@@ -68,6 +68,7 @@ def train_classifier(
     batch_size: int = 512,
     epochs: int = 50,
     lr: float = 1e-2,
+    use_zip: bool = False, 
     save_path=None,
     save_name=None,
 ):
@@ -88,18 +89,30 @@ def train_classifier(
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
-    train_data = ZipImageNet(
-        zip_path="./datasets/ILSVRC_2012.zip",
-        root="./datasets/ILSVRC_2012",
-        split="train",
-        transform=train_transform,
-    )
-    test_data = ZipImageNet(
-        zip_path="./datasets/ILSVRC_2012.zip",
-        root="./datasets/ILSVRC_2012",
-        split="val",
-        transform=test_transform,
-    )
+    if use_zip:
+        train_data = ZipImageNet(
+            zip_path="./datasets/ILSVRC_2012.zip",
+            root="./datasets/ILSVRC_2012",
+            split="train",
+            transform=train_transform,
+        )
+        test_data = ZipImageNet(
+            zip_path="./datasets/ILSVRC_2012.zip",
+            root="./datasets/ILSVRC_2012",
+            split="val",
+            transform=test_transform,
+        )
+    else:
+        train_data = torchvision.datasets.ImageNet(
+            root="./datasets/ILSVRC_2012",
+            split="train",
+            transform=train_transform,
+        )
+        test_data = torchvision.datasets.ImageNet(
+            root="./datasets/ILSVRC_2012",
+            split="val",
+            transform=test_transform,
+        )
 
     train_loader = DataLoader(
         train_data, batch_size=batch_size, shuffle=True, num_workers=13, pin_memory=True
